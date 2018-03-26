@@ -1,66 +1,68 @@
 package main
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"syscall"
 	"strings"
 )
 
 func main() {
+	// inject ssm params
 	paths := os.Getenv("AWS_ENV_PATH")
-	if  paths == "" {
+	if paths == "" {
 		log.Println("missing AWS_ENV_PATH, aborting.")
 		return
 	}
-
-	log.Println(paths)
-	for _, path := range strings.Split(paths ,";") {
-		ExportVariables(path, "")
-	}
+	environ := append(*ExportVariables(paths), os.Environ()...)
+	// passthrough execution
+	binary, lookErr := exec.LookPath(os.Args[1])
+	 if lookErr != nil {
+		 binary, lookErr = exec.LookPath("sh")
+		 if lookErr != nil {
+				 panic(lookErr)
+		 }
+	 }
+	execErr := syscall.Exec(binary, os.Args[1:], environ)
+  if execErr != nil {
+      panic(execErr)
+  }
 }
 
-func CreateClient() *ssm.SSM {
+func ExportVariables(paths string) *[]string {
+	// init client
 	session := session.Must(session.NewSession())
-	return ssm.New(session)
-}
-
-func ExportVariables(path string, nextToken string) {
-	client := CreateClient()
-
-	input := &ssm.GetParametersByPathInput{
-		Path:           &path,
-		WithDecryption: aws.Bool(true),
+	client := ssm.New(session)
+	ret := []string{}
+	// parse and load each path
+	for _, path := range strings.Split(paths , ";") {
+		input := &ssm.GetParametersByPathInput{
+			Path:           &path,
+			WithDecryption: aws.Bool(true),
+		}
+		// load params per path
+		nextToken := ""
+		for {
+			if nextToken != "" {
+				input.SetNextToken(nextToken)
+			}
+			output, err := client.GetParametersByPath(input)
+			if err != nil {
+				panic(err)
+			}
+			for _, param := range output.Parameters {
+				key := strings.Trim((*param.Name)[len(path):], "/")
+				ret = append(ret, fmt.Sprintf("%s=%s", key, *param.Value))
+			}
+			if output.NextToken == nil {
+				break;
+			}
+		}
 	}
-
-	if nextToken != "" {
-		input.SetNextToken(nextToken)
-	}
-
-	output, err := client.GetParametersByPath(input)
-
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// for _, element := range output.Parameters {
-	// 	PrintExportParameter(path, element)
-	// }
-
-	if output.NextToken != nil {
-		ExportVariables(path, *output.NextToken)
-	}
-}
-
-func PrintExportParameter(path string, parameter *ssm.Parameter) {
-	name := *parameter.Name
-	value := *parameter.Value
-
-	env := strings.Trim(name[len(path):], "/")
-	value = strings.Replace(value, "\n", "\\n", -1)
-
-	fmt.Printf("export %s=$'%s'\n", env, value)
+	return &ret
 }

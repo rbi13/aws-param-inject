@@ -62,6 +62,7 @@ func ExportVariables(paths string) *[]string {
 			if output.NextToken == nil {
 				break;
 			}
+			nextToken = *output.NextToken
 		}
 	}
 	return &ret

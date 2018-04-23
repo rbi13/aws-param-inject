@@ -18,7 +18,7 @@ sudo chmod +x /usr/local/bin/param-inject
 RUN \
   INJ_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/account/project/releases/latest)\
   && INJ_VERSION=$(echo $INJ_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')\
-  && curl -L -o /usr/local/bin/param-inject "https://github.com/rbi13/aws-param-inject/releases/download/$INJ_RELEASE/aws-param-inject-linux-amd64"
+  && curl -L -o /usr/local/bin/param-inject "https://github.com/rbi13/aws-param-inject/releases/download/$INJ_RELEASE/aws-param-inject-linux-amd64"\
   sudo chmod +x /usr/local/bin/param-inject
 ...
 ```

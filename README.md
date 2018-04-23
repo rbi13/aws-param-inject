@@ -4,8 +4,21 @@ golang script for config injection of AWS SSM parameter-store values.
 
 install:
 ```sh
-sudo curl -L -o /usr/local/bin/param-inject https://github.com/rbi13/aws-param-inject/releases/download/0.0.2/aws-param-inject-linux-amd64
+sudo curl -L -o /usr/local/bin/param-inject https://github.com/rbi13/aws-param-inject/releases/download/0.0.3/aws-param-inject-linux-amd64
 sudo chmod +x /usr/local/bin/param-inject
+
+# Latest
+INJ_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/account/project/releases/latest)
+INJ_VERSION=$(echo $INJ_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+https://github.com/rbi13/aws-param-inject/releases/download/${INJ_RELEASE}/aws-param-inject-linux-amd64
+
+# Docker example
+...
+RUN \
+  INJ_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/account/project/releases/latest)\
+  && INJ_VERSION=$(echo $INJ_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')\
+  && curl -L -o /usr/local/bin/param-inject "https://github.com/rbi13/aws-param-inject/releases/download/$INJ_RELEASE/aws-param-inject-linux-amd64"
+...
 ```
 
 example:

@@ -1,0 +1,11 @@
+version: '3'
+services:
+  dev:
+    image: golang
+    working_dir: /current
+    volumes:
+      - ./:/current
+      - ${HOME}/.aws:/root/.aws
+    environment:
+      - AWS_REGION='us-east-1'
+      - AWS_ENV_PATH='/YOUR/PATH/HERE'

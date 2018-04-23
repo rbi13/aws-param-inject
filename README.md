@@ -37,3 +37,21 @@ Use multiple namespaces by seperating them with semi-colons:
 ```sh
 AWS_ENV_PATH='/production/all;/production/app1'
 ```
+
+## Development
+
+A development environment can be created using docker containers:
+
+```sh
+make docker
+```
+
+This will use the `docker-compose` config in `dev.yml` giving you a shell into a
+container running the official `golang` dockerhub image. modify the
+`dev.yml` config to edit/augment the development environment (e.g. to set your
+`AWS_ENV_PATH`). From here it is golang business as usual:
+
+```sh
+go get
+go run inject.go env
+```

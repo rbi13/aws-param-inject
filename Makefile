@@ -3,4 +3,4 @@ build:
 clean:
 	sudo rm -rf bin
 docker:
-	docker-compose -f dev.yml run dev /bin/bash
+	docker-compose -f dev.yml run --rm dev /bin/bash
